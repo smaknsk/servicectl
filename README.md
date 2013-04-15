@@ -1,7 +1,7 @@
-Control services (daemons) for systemd in chroot() environment
+Control daemons for systemd in chroot environment
 =====================
 
-Servicectl - bash script start/stop daemons for linux using systemd in chroot and SysVinit outside the chroot environment.
+Servicectl - bash script start/stop service (daemons) for linux using systemd in chroot and SysVinit outside the chroot environment.
 servicectl management daemon uses the service files of systemd, such as /usr/lib/systemd/system/nginx.service
 
 Introduction
@@ -18,7 +18,7 @@ please refer to this guide: http://0pointer.de/blog/projects/changing-roots
 If your base system (outside chroot) uses Sys V init script,
 then you can use servicectl:
 
-Use
+Usage
 ---
 ```bash
 sudo servicectl action service
