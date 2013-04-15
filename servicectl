@@ -1,0 +1,158 @@
+#!/bin/sh
+# Control services for system based on Systemd inside chroot and SysVinit outside chroot
+# https://github.com/smaknsk/servicectl
+#
+
+# Pach systemd services file
+SYSTEMD_UNITS_PATH="/usr/lib/systemd/system/"
+
+# Check is root
+if [ $EUID -ne 0 ]; then
+  echo "You must be a root user" 2>&1
+  exit 1
+fi
+
+# Parse ini file. usage: parse $inifile $section $key
+# Return 0 on success, 1 if file cannot be opened, 2 if the given key cannot be found in the given section
+function parse()
+{
+  local _inifile=$1
+  local _section=$2
+  local _key=$3
+
+   if [ ! -r "$_inifile" ]
+   then
+     exit 1;
+   fi        
+
+   exec < $_inifile
+
+   while read section; do
+     if [ "$section" = '['$_section']' ] ; then
+       IFS='='
+       while read key value; do
+         # check if we are still within our section
+         if [ `echo -n $key | grep "^\s*\[.*\]\s*$"` ]; then
+            exit 2;
+         fi
+         # strip leading and trailing whitespace from keys
+         key=`echo -n "$key" | sed 's/^\s*//;s/\s*$//'`
+         _key=`echo -n "$_key" | sed 's/^\s*//;s/\s*$//'`
+         if [ "$key" = "$_key" ]; then
+           echo $value
+           exit 0;
+         fi
+      done
+    fi
+  done
+  exit 2;
+}
+
+# Execute action from systemd service file
+function exec_action() {
+    local action=$1
+    local service=$2
+    local file="${SYSTEMD_UNITS_PATH}${service}.service"
+    local is_required=1 # by default turn action is required
+    local cmd=""
+        
+    # if pass arg $3 then set value
+    if [[ -n $3 ]]; then
+        local is_required=$3
+    fi
+
+    cmd=`parse $file Service $action`
+    local ret=$?    
+    if [ $ret = 1 ]; then
+        echo "Error: file $file cannot be opened"
+        return 1
+    fi
+    if [ $ret = 2 ]; then
+    
+        # if action required, return error
+        if [ $is_required = 1 ]; then
+            echo "Error: action $action not found in file $file"
+            return 1
+        fi
+        
+        return 0        
+    fi
+  
+    eval $cmd
+    return $?
+}
+
+function exec_if_exists() {
+    exec_action $@ 0
+}
+
+function exec_stop() {
+    local service=$1
+    local file="${SYSTEMD_UNITS_PATH}${service}.service"
+    local cmd=""
+    
+    cmd=`parse $file Service ExecStop`
+    local ret=$?
+    
+    # if ExecStop exists
+    if [ $ret = 0 ]; then
+        exec_action ExecStop $service
+        return $?
+    fi
+    
+    # get path pid file
+    pid_file=`parse $file Service PIDFile`
+    local ret=$?
+    if [ $ret != 0 ]; then
+        echo "Error: attribute PIDFile not exists in file $file"
+        return 1
+    fi
+
+    read PID < $pid_file
+    kill -TERM "$PID" || echo "Couldn't kill PID"
+}
+
+if [[ -z ${@:2} ]]; then
+    echo "Error: you must specify the service"
+    exit 1
+fi
+
+# Switch action
+case "$1" in
+    start)
+        for service in ${@:2} 
+        do
+            exec_if_exists ExecStartPre $service
+            if [ $? = 0 ]; then
+                exec_action ExecStart $service
+            fi
+        done
+    ;;
+    
+    stop)
+        for service in ${@:2} 
+        do
+            exec_stop $service
+        done
+    ;;
+    
+    restart)
+        for service in ${@:2} 
+        do
+            exec_stop $service
+            exec_action ExecStart $service
+        done
+    ;;
+    
+    reload)
+        for service in ${@:2} 
+        do
+            exec_action ExecReload $service
+        done
+    ;;
+    
+    *)
+        echo "Availble action: start, stop, restart or reload"
+        exit 1
+    ;;
+esac
