@@ -2,7 +2,7 @@ Control daemons for systemd in chroot environment
 =====================
 
 Servicectl - bash script start/stop service (daemons) for linux using systemd in chroot and SysVinit outside the chroot environment.
-servicectl management daemon uses the service files of systemd, such as /usr/lib/systemd/system/nginx.service
+servicectl management daemon uses the service files of systemd, e.g. /usr/lib/systemd/system/nginx.service
 
 Introduction
 ---
@@ -12,28 +12,45 @@ Systemd is not working in chroot environment:
 sudo systemctl start nginx
 Running in chroot, ignoring request.
 ```
-If your base system (outside chroot) uses systemd,
-please refer to this guide: http://0pointer.de/blog/projects/changing-roots
+If your base system (outside chroot):
+1. used systemd, please refer to guide: http://0pointer.de/blog/projects/changing-roots
+2. used SysVinit script, then you can use servicectl.
 
-If your base system (outside chroot) uses Sys V init script,
-then you can use servicectl:
+Requare for chroot system (inside chroot):
+1. installed systemd
 
 Usage
 ---
+### servicectl
 ```bash
 sudo servicectl action service
 ```
-action - can be {start, stop, restart, reload},
-service - file name in folder /usr/lib/systemd/system/
+This command just exec ${action} from file /usr/lib/systemd/system/${service}.service
+If passed action enable or disable, servicectl create or delete symlink on ${service}.service for use serviced.
+
+Params:
+* action - can be {start, stop, restart, reload, enable, disable},
+* service - file name in folder /usr/lib/systemd/system/
+
+### serviced
+```bash
+sudo serviced action
+```
+This command exec ${action} for all enable services.
+
+Params:
+* action - by default start, can be {start, stop, restart, reload, disable}
 
 Example:
 I'm using chrome os as the base system and archlinux in chroot environment.
 ```bash
-sudo servicectl start nginx php-fpm
-sudo servicectl stop nginx php-fpm
-sudo servicectl restart nginx php-fpm
-sudo servicectl reload nginx php-fpm
+# inside chroot
+sudo servicectl enable nginx php-fpm
+
+# outside chroot: 
+# init chroot and run daemons
+sudo chroot /path/to/yoursystem /usr/local/bin/serviced
 ```
 
-If you know how to do it better, let me know =)
+If you know how to do it better, let me know =) 
 Good luck
