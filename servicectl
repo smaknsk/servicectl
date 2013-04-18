@@ -6,9 +6,15 @@
 # Pach systemd services file
 SYSTEMD_UNITS_PATH="/usr/lib/systemd/system/"
 
+# Path locate this script
+DIR=$(dirname $(readlink -f $0))
+
+# Path contents symlink on systemd units files
+SERVICECTL_ENABLED_PATH="$DIR/enabled/"
+
 # Check is root
 if [ $EUID -ne 0 ]; then
-  echo "You must be a root user" 2>&1
+  echo "You must run as root user" 2>&1
   exit 1
 fi
 
@@ -56,7 +62,7 @@ function exec_action() {
     local is_required=1 # by default turn action is required
     local cmd=""
         
-    # if pass arg $3 then set value
+    # if passed arg $3 then set value
     if [[ -n $3 ]]; then
         local is_required=$3
     fi
@@ -122,6 +128,7 @@ case "$1" in
     start)
         for service in ${@:2} 
         do
+            service=${service%".service"}
             exec_if_exists ExecStartPre $service
             if [ $? = 0 ]; then
                 exec_action ExecStart $service
@@ -132,6 +139,7 @@ case "$1" in
     stop)
         for service in ${@:2} 
         do
+            service=${service%".service"}
             exec_stop $service
         done
     ;;
@@ -139,6 +147,7 @@ case "$1" in
     restart)
         for service in ${@:2} 
         do
+            service=${service%".service"}
             exec_stop $service
             exec_action ExecStart $service
         done
@@ -147,7 +156,45 @@ case "$1" in
     reload)
         for service in ${@:2} 
         do
+            service=${service%".service"}
             exec_action ExecReload $service
+        done
+    ;;
+
+    enable)
+        for service in ${@:2} 
+        do
+            service=${service%".service"}
+            file="${SYSTEMD_UNITS_PATH}${service}.service"
+            enabled_symlink="${SERVICECTL_ENABLED_PATH}${service}.service"
+
+            if [ ! -f "$file" ]; then
+                echo "Error: file $file is not exists"
+                continue
+            fi
+
+            if [ -f "$enabled_symlink" ]; then
+                echo "${service} already enabled"
+                continue
+            fi
+
+            echo "ln -s \"$file\" \"$enabled_symlink\""
+            ln -s "$file" "$enabled_symlink"
+        done
+    ;;
+
+    disable)
+        for service in ${@:2} 
+        do
+            service=${service%".service"}
+            file="${SERVICECTL_ENABLED_PATH}${service}.service"
+            if [ ! -f "$file" ]; then
+                echo "Error: file $file is not exists"
+                continue
+            fi
+            
+            echo "rm $file"
+            rm $file
         done
     ;;
     

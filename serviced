@@ -1,0 +1,17 @@
+#!/bin/sh
+# Control services for system based on Systemd inside chroot and SysVinit outside chroot
+# https://github.com/smaknsk/servicectl
+#
+
+# Path locate this script
+DIR=$(dirname $(readlink -f $0))
+
+# Path contents symlink on systemd units files
+SERVICECTL_ENABLED_PATH="$DIR/enabled/"
+
+action="start"
+if [[ -n $1 ]]; then
+    action=$1
+fi
+
+servicectl $action $(dir $SERVICECTL_ENABLED_PATH)
