@@ -13,11 +13,11 @@ sudo systemctl start nginx
 Running in chroot, ignoring request.
 ```
 If your base system (outside chroot):
-1. used systemd, please refer to guide: http://0pointer.de/blog/projects/changing-roots
-2. used SysVinit script, then you can use servicectl.
+* used systemd, please refer to guide: http://0pointer.de/blog/projects/changing-roots
+* used SysVinit script, then you can use servicectl.
 
 Requare for chroot system (inside chroot):
-1. installed systemd
+* installed systemd
 
 Usage
 ---
@@ -29,7 +29,7 @@ This command just exec ${action} from file /usr/lib/systemd/system/${service}.se
 If passed action enable or disable, servicectl create or delete symlink on ${service}.service for use serviced.
 
 Params:
-* action - can be {start, stop, restart, reload, enable, disable},
+* action - can be {start, stop, restart, reload, enable, disable}
 * service - file name in folder /usr/lib/systemd/system/
 
 ### serviced
@@ -49,7 +49,7 @@ sudo servicectl enable nginx php-fpm
 
 # outside chroot: 
 # init chroot and run daemons
-sudo chroot /path/to/yoursystem /usr/local/bin/serviced
+sudo chroot /path/to/root serviced
 ```
 
 If you know how to do it better, let me know =) 

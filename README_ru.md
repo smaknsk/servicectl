@@ -17,7 +17,7 @@ Running in chroot, ignoring request.
 * использует System V init script, то вы можете использовать servicectl.
 
 Требования для chroot системы (внутри chroot):
-1. установленный systemd
+* установленный systemd
 
 Использование
 ---
@@ -25,11 +25,11 @@ Running in chroot, ignoring request.
 ```bash
 sudo servicectl action service
 ``` 
-This command just exec ${action} from file /usr/lib/systemd/system/${service}.service
-If passed action enable or disable, servicectl create or delete symlink on ${service}.service for use serviced.
+Эта команда просто запускает ${action} из файла /usr/lib/systemd/system/${service}.service
+Если передан action enable или disable, servicectl создаст или удалит symlink на ${service}.service для использования в serviced.
 
 Параметры:
-* action - может быть {start, stop, restart, reload},
+* action - может быть {start, stop, restart, reload, enable, disable}
 * service - имя файла из папки /usr/lib/systemd/system/
 
 ### serviced
@@ -47,8 +47,9 @@ sudo serviced action
 # inside chroot
 sudo servicectl enable nginx php-fpm
 
+# outside chroot: 
 # init chroot and run daemons
-sudo chroot /path/to/yoursystem /usr/local/bin/serviced
+sudo chroot /path/to/root serviced
 ```
 
 Если вы знаете как сделать это лучше, дайте знать =)
