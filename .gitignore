@@ -1,3 +1,4 @@
 # Cloud9 IDE
-.c9revisions
-.settings
+/.c9revisions
+/.settings
+/.idea

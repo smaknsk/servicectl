@@ -19,6 +19,19 @@ If your base system (outside chroot):
 Requare for chroot system (inside chroot):
 * installed systemd
 
+Installation
+---
+
+### Packages:
+ArchLinux - https://aur.archlinux.org/packages/servicectl/
+### Manual:
+```bash
+wget https://github.com/smaknsk/servicectl/archive/1.0.tar.gz
+tar -xf 1.0.tar.gz -C /usr/lib/
+ln -s /usr/lib/servicectl-1.0/servicectl /usr/bin/servicectl
+ln -s /usr/lib/servicectl-1.0/serviced /usr/bin/serviced
+```
+
 Usage
 ---
 ### servicectl
@@ -41,15 +54,16 @@ This command exec ${action} for all enable services.
 Params:
 * action - by default start, can be {start, stop, restart, reload, disable}
 
-Example:
+Example
+---
 I'm using chrome os as the base system and archlinux in chroot environment.
 ```bash
 # inside chroot
 sudo servicectl enable nginx php-fpm
 
 # outside chroot: 
-# init chroot and run daemons
-sudo chroot /path/to/root serviced
+# init chroot and run all enabled daemons
+sudo chroot /path/to/chroot serviced
 ```
 
 If you know how to do it better, let me know =) 
