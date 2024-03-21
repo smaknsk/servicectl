@@ -13,7 +13,7 @@ DIR=$(dirname $(readlink -f $0))
 SERVICECTL_ENABLED_PATH="$DIR/enabled/"
 
 # Check is root
-if [ $EUID -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
   echo "You must run as root user" 2>&1
   exit 1
 fi
